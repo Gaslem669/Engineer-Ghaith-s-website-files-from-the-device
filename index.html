@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Untitled</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز مشاركة الملفات - المهندس غيث سالم</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #ff6699, #6699ff);
+            text-align: center;
+            direction: rtl;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: #ff3366;
+            color: white;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            border-bottom: 4px solid #cc0055;
+        }
+
+        .upload-container {
+            background: white;
+            width: 60%;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .drop-area {
+            border: 2px dashed #ff3399;
+            padding: 30px;
+            margin-top: 20px;
+            cursor: pointer;
+            background: white;
+            transition: 0.3s;
+        }
+
+        .drop-area:hover {
+            background: #ffe6f2;
+        }
+
+        .uploaded-files {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            background: #f2f2f2;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .file-preview {
+            margin-top: 10px;
+        }
+
+        .file-preview audio,
+        .file-preview video {
+            width: 100%;
+            max-height: 200px;
+        }
+
+        .file-preview iframe {
+            width: 100%;
+            height: 300px;
+        }
+
+        .btn {
+            margin: 5px;
+            padding: 5px 10px;
+            background: #ff3399;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #cc0066;
+        }
+
+        .delete-btn {
+            background: red;
+        }
+
+        .save-btn {
+            background: green;
+        }
+
+        .footer {
+            margin-top: 20px;
+            background: #222;
+            color: white;
+            padding: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        📂 مركز مشاركة الملفات | <span style="color: yellow;">المهندس غيث سالم</span>
+    </div>
+
+    <div class="upload-container">
+        <h2>🔄 رفع الملفات ومشاركتها بسهولة</h2>
+        <div class="drop-area" id="drop-area">
+            <p>اسحب الملفات هنا أو انقر للاختيار</p>
+            <input type="file" id="fileInput" multiple hidden>
+        </div>
+        <div class="uploaded-files">
+            <h3>📁 الملفات المرفوعة</h3>
+            <button class="btn save-btn" onclick="saveFilesPermanently()">💾 حفظ الملفات بشكل دائم</button>
+            <ul id="fileList"></ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        جميع الحقوق محفوظة © 2025 | تصميم وتطوير: <span style="color: yellow;">المهندس غيث سالم</span>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadStoredFiles);
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        dropArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (event) => {
+            handleFiles(event.target.files);
+        });
+
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.style.background = "#ffe6f2";
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.style.background = "white";
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.style.background = "white";
+            handleFiles(event.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            let storedFiles = JSON.parse(localStorage.getItem("uploadedFiles")) || [];
+
+            for (let file of files) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    storedFiles.push({ name: file.name, url: e.target.result, type: file.type });
+                    localStorage.setItem("uploadedFiles", JSON.stringify(storedFiles));
+                    loadStoredFiles();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadStoredFiles() {
+            fileList.innerHTML = "";
+            let storedFiles = JSON.parse(localStorage.getItem("uploadedFiles")) || [];
+
+            storedFiles.forEach((file, index) => {
+                let listItem = document.createElement("li");
+                let preview = getFilePreview(file);
+
+                listItem.innerHTML = `
+                    📄 ${file.name} 
+                    <button class="btn" onclick="copyToClipboard('${file.url}')">📋 نسخ الرابط</button>
+                    <button class="btn" onclick="openInChrome('${file.url}')">🌐 فتح</button>
+                    <button class="btn" onclick="shareFile('${file.url}')">🔗 مشاركة</button>
+                    <button class="btn delete-btn" onclick="deleteFile(${index})">❌ حذف</button>
+                    <div class="file-preview">${preview}</div>
+                `;
+                fileList.appendChild(listItem);
+            });
+        }
+
+        function saveFilesPermanently() {
+            alert("تم حفظ الملفات بشكل دائم!");
+            localStorage.setItem("permanentFiles", localStorage.getItem("uploadedFiles"));
+        }
+
+        function getFilePreview(file) {
+            if (file.type.startsWith("image/")) {
+                return `<img src="${file.url}" width="100%">`;
+            } else if (file.type.startsWith("audio/")) {
+                return `<audio controls><source src="${file.url}" type="${file.type}"></audio>`;
+            } else if (file.type.startsWith("video/")) {
+                return `<video controls><source src="${file.url}" type="${file.type}"></video>`;
+            } else if (file.type === "application/pdf") {
+                return `<iframe src="${file.url}"></iframe>`;
+            } else {
+                return `<p>⚠️ لا يمكن عرض هذا الملف، قم بتحميله لعرضه</p>`;
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("تم نسخ الرابط بنجاح!");
+            });
+        }
+
+        function openInChrome(url) {
+            window.open(url, '_blank');
+        }
+
+        function shareFile(url) {
+            if (navigator.share) {
+                navigator.share({ title: "مشاركة ملف", text: "يمكنك تحميل الملف من هنا:", url: url });
+            } else {
+                alert("المشاركة غير مدعومة على هذا الجهاز.");
+            }
+        }
+
+        function deleteFile(index) {
+            let storedFiles = JSON.parse(localStorage.getItem("uploadedFiles")) || [];
+            storedFiles.splice(index, 1);
+            localStorage.setItem("uploadedFiles", JSON.stringify(storedFiles));
+            loadStoredFiles();
+        }
+    </script>
+
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
